@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nottung/models/user_model.dart';
+import 'package:nottung/utility/my_style.dart';
 import 'package:nottung/widget/contact.dart';
 import 'package:nottung/widget/home.dart';
 
@@ -57,6 +58,21 @@ class _MyServiceState extends State<MyService> {
     );
   }
 
+  Widget menuReadQRcode() {
+    return ListTile(
+      leading: Icon(
+        Icons.photo_camera,
+        size: 36.0,
+      ),
+      title: Text('Read QR code'),
+      subtitle: Text('Description Read QR code or Bar code'),
+      onTap: () {
+        
+        Navigator.of(context).pop();
+      },
+    );
+  }
+
   Widget showAppName() {
     return Text('Nott Ung');
   }
@@ -104,7 +120,7 @@ class _MyServiceState extends State<MyService> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: AppBar(backgroundColor: MyStyle().textColor,
         title: Text('My Service'),
       ),
       body: currentWidget,
