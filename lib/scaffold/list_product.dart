@@ -100,17 +100,19 @@ class _ListProductState extends State<ListProduct> {
   }
 
   Widget showProductItem() {
-    return ListView.builder(
-      controller: scrollController,
-      itemCount: amountListView,
-      itemBuilder: (BuildContext buildContext, int index) {
-        return Row(
-          children: <Widget>[
-            showImage(index),
-            showText(index),
-          ],
-        );
-      },
+    return Expanded(
+          child: ListView.builder(
+        controller: scrollController,
+        itemCount: amountListView,
+        itemBuilder: (BuildContext buildContext, int index) {
+          return Row(
+            children: <Widget>[
+              showImage(index),
+              showText(index),
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -120,15 +122,30 @@ class _ListProductState extends State<ListProduct> {
     );
   }
 
+  Widget myLayout() {
+    return Column(
+      children: <Widget>[
+        searchForm(),
+        showProductItem(),
+      ],
+    );
+  }
+
+  Widget searchForm() {
+    return Container(margin: EdgeInsets.only(left: 40.0,right: 40.0),
+      child: TextField(
+        decoration: InputDecoration(hintText: 'Search'),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('List Product'),
       ),
-      body: productAllModels.length == 0
-          ? showProgressIndicate()
-          : showProductItem(),
+      body: productAllModels.length == 0 ? showProgressIndicate() : myLayout(),
     );
   }
 }
