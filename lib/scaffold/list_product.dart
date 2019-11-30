@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:nottung/models/product_all_model.dart';
+import 'package:nottung/scaffold/detail.dart';
 import 'package:nottung/utility/my_style.dart';
 
 class ListProduct extends StatefulWidget {
@@ -115,10 +116,12 @@ class _ListProductState extends State<ListProduct> {
   }
 
   Widget showImage(int index) {
-    return Container(
-      padding: EdgeInsets.all(5.0),
-      width: MediaQuery.of(context).size.width * 0.5,
-      child: Image.network(filterProductAllModels[index].photo),
+    return ClipRRect(borderRadius: BorderRadius.circular(25.0),
+          child: Container(
+        padding: EdgeInsets.all(5.0),
+        width: MediaQuery.of(context).size.width * 0.5,
+        child: Image.network(filterProductAllModels[index].photo),
+      ),
     );
   }
 
@@ -128,11 +131,20 @@ class _ListProductState extends State<ListProduct> {
         controller: scrollController,
         itemCount: amountListView,
         itemBuilder: (BuildContext buildContext, int index) {
-          return Row(
-            children: <Widget>[
-              showImage(index),
-              showText(index),
-            ],
+          return GestureDetector(
+            child: Row(
+              children: <Widget>[
+                showImage(index),
+                showText(index),
+              ],
+            ),
+            onTap: () {
+              MaterialPageRoute materialPageRoute =
+                  MaterialPageRoute(builder: (BuildContext buildContext) {
+                return Detail(productAllModel: filterProductAllModels[index],);
+              });
+              Navigator.of(context).push(materialPageRoute);
+            },
           );
         },
       ),
@@ -141,18 +153,19 @@ class _ListProductState extends State<ListProduct> {
 
   Widget showProgressIndicate() {
     return Center(
-      child: statusStart ? CircularProgressIndicator(): Text('Search not Found'),
+      child:
+          statusStart ? CircularProgressIndicator() : Text('Search not Found'),
     );
   }
 
-  Widget myLayout() {
-    return Column(
-      children: <Widget>[
-        searchForm(),
-        showProductItem(),
-      ],
-    );
-  }
+  // Widget myLayout() {
+  //   return Column(
+  //     children: <Widget>[
+  //       searchForm(),
+  //       showProductItem(),
+  //     ],
+  //   );
+  // }
 
   Widget searchForm() {
     return Container(
@@ -179,15 +192,27 @@ class _ListProductState extends State<ListProduct> {
     );
   }
 
+  Widget showContent() {
+    return filterProductAllModels.length == 0
+        ? showProgressIndicate()
+        : showProductItem();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('List Product'),
       ),
-      body: filterProductAllModels.length == 0
-          ? showProgressIndicate()
-          : myLayout(),
+      // body: filterProductAllModels.length == 0
+      //     ? showProgressIndicate()
+      //     : myLayout(),
+      body: Column(
+        children: <Widget>[
+          searchForm(),
+          showContent(),
+        ],
+      ),
     );
   }
 }
