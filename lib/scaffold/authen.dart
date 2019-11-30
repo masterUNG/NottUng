@@ -43,7 +43,7 @@ class _AuthenState extends State<Authen> {
     } else {
       // No Space
       String url =
-          'http://ptnpharma.com/app/json_login_get.php?username=$user&password=$password';
+          '${MyStyle().getUserWhereUserAndPass}?username=$user&password=$password';
       Response response = await get(url);
       var result = json.decode(response.body);
       print('result = $result');

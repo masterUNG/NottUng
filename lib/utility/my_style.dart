@@ -7,5 +7,10 @@ class MyStyle {
 
   String fontName = 'Pacifico';
 
+  // For Server
+  String readAllProduct = 'http://ptnpharma.com/app/json_product.php';
+  String readProductWhereMode =  'http://ptnpharma.com/app/json_product.php?product_mode=';
+  String getUserWhereUserAndPass = 'http://ptnpharma.com/app/json_login_get.php';
+
   MyStyle();
 }
