@@ -4,12 +4,16 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:nottung/models/product_all_model.dart';
+import 'package:nottung/models/user_model.dart';
 import 'package:nottung/scaffold/detail.dart';
+import 'package:nottung/scaffold/detail_cart.dart';
 import 'package:nottung/utility/my_style.dart';
 
 class ListProduct extends StatefulWidget {
   final int index;
-  ListProduct({Key key, this.index}) : super(key: key);
+  final UserModel userModel;
+
+  ListProduct({Key key, this.index, this.userModel}) : super(key: key);
 
   @override
   _ListProductState createState() => _ListProductState();
@@ -42,16 +46,22 @@ class _ListProductState extends State<ListProduct> {
   ScrollController scrollController = ScrollController();
   final Debouncer debouncer = Debouncer(milliseconds: 500);
   bool statusStart = true;
+  int amountCart = 0;
+  UserModel myUserModel;
 
   // Method
   @override
   void initState() {
     super.initState();
     myIndex = widget.index;
-
-    readData();
+    myUserModel = widget.userModel;
 
     createController();
+
+    setState(() {
+      readData();
+      readCart();
+    });
   }
 
   void createController() {
@@ -116,8 +126,9 @@ class _ListProductState extends State<ListProduct> {
   }
 
   Widget showImage(int index) {
-    return ClipRRect(borderRadius: BorderRadius.circular(25.0),
-          child: Container(
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(25.0),
+      child: Container(
         padding: EdgeInsets.all(5.0),
         width: MediaQuery.of(context).size.width * 0.5,
         child: Image.network(filterProductAllModels[index].photo),
@@ -141,7 +152,10 @@ class _ListProductState extends State<ListProduct> {
             onTap: () {
               MaterialPageRoute materialPageRoute =
                   MaterialPageRoute(builder: (BuildContext buildContext) {
-                return Detail(productAllModel: filterProductAllModels[index],);
+                return Detail(
+                  productAllModel: filterProductAllModels[index],
+                  userModel: myUserModel,
+                );
               });
               Navigator.of(context).push(materialPageRoute);
             },
@@ -198,10 +212,61 @@ class _ListProductState extends State<ListProduct> {
         : showProductItem();
   }
 
+  Future<void> readCart() async {
+    String memberId = myUserModel.id;
+    String url =
+        'http://ptnpharma.com/app/json_loadmycart.php?memberId=$memberId';
+
+    Response response = await get(url);
+    var result = json.decode(response.body);
+
+    var cartList = result['cart'];
+    for (var map in cartList) {
+      setState(() {
+        amountCart++;
+      });
+    }
+  }
+
+  Widget showCart() {
+    return GestureDetector(onTap: (){routeToDetailCart();},
+          child: Container(
+        margin: EdgeInsets.only(top: 4.0, right: 4.0),
+        width: 36.0,
+        height: 36.0,
+        child: Stack(
+          children: <Widget>[
+            Image.asset('images/shopping_cart.png'),
+            Text(
+              '$amountCart',
+              style: TextStyle(
+                backgroundColor: Colors.yellow,
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void routeToDetailCart() {
+    MaterialPageRoute materialPageRoute =
+        MaterialPageRoute(builder: (BuildContext buildContext) {
+      return DetailCart(
+        userModel: myUserModel,
+      );
+    });
+    Navigator.of(context).push(materialPageRoute);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: MyStyle().textColor,
+        actions: <Widget>[showCart()],
         title: Text('List Product'),
       ),
       // body: filterProductAllModels.length == 0

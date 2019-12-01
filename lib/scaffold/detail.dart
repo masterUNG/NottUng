@@ -4,12 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:nottung/models/product_all_model.dart';
 import 'package:nottung/models/unit_size_model.dart';
+import 'package:nottung/models/user_model.dart';
+import 'package:nottung/scaffold/detail_cart.dart';
 import 'package:nottung/utility/my_style.dart';
 import 'package:nottung/utility/normal_dialog.dart';
 
 class Detail extends StatefulWidget {
   final ProductAllModel productAllModel;
-  Detail({Key key, this.productAllModel}) : super(key: key);
+  final UserModel userModel;
+
+  Detail({Key key, this.productAllModel, this.userModel}) : super(key: key);
 
   @override
   _DetailState createState() => _DetailState();
@@ -25,13 +29,19 @@ class _DetailState extends State<Detail> {
     0,
     0
   ]; //amounts[0] -> s, amounts[1] -> m,amounts[2] -> l
+  int amountCart = 0;
+  UserModel myUserModel;
 
   // Method
   @override
   void initState() {
     super.initState();
     currentProductAllModel = widget.productAllModel;
-    getProductWhereID();
+    myUserModel = widget.userModel;
+    setState(() {
+      getProductWhereID();
+      readCart();
+    });
   }
 
   Future<void> getProductWhereID() async {
@@ -187,10 +197,64 @@ class _DetailState extends State<Detail> {
     );
   }
 
+  Future<void> readCart() async {
+    String memberId = myUserModel.id;
+    String url =
+        'http://ptnpharma.com/app/json_loadmycart.php?memberId=$memberId';
+
+    Response response = await get(url);
+    var result = json.decode(response.body);
+
+    var cartList = result['cart'];
+    for (var map in cartList) {
+      setState(() {
+        amountCart++;
+      });
+    }
+  }
+
+  Widget showCart() {
+    return GestureDetector(
+      onTap: () {
+        routeToDetailCart();
+      },
+      child: Container(
+        margin: EdgeInsets.only(top: 4.0, right: 4.0),
+        width: 36.0,
+        height: 36.0,
+        child: Stack(
+          children: <Widget>[
+            Image.asset('images/shopping_cart.png'),
+            Text(
+              '$amountCart',
+              style: TextStyle(
+                backgroundColor: Colors.yellow,
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void routeToDetailCart() {
+    MaterialPageRoute materialPageRoute =
+        MaterialPageRoute(builder: (BuildContext buildContext) {
+      return DetailCart(
+        userModel: myUserModel,
+      );
+    });
+    Navigator.of(context).push(materialPageRoute);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        actions: <Widget>[showCart()],
+        backgroundColor: MyStyle().textColor,
         title: Text('Detail'),
       ),
       body: productAllModel == null ? showProgress() : showDetailList(),
@@ -203,7 +267,41 @@ class _DetailState extends State<Detail> {
     );
   }
 
+  Widget addButton() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: RaisedButton(
+                color: MyStyle().textColor,
+                child: Text(
+                  'Add to Cart',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                onPressed: () {},
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget showDetailList() {
+    return Stack(
+      children: <Widget>[
+        showControler(),
+        addButton(),
+      ],
+    );
+  }
+
+  ListView showControler() {
     return ListView(
       padding: EdgeInsets.all(30.0),
       children: <Widget>[

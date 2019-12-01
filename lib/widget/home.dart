@@ -4,23 +4,31 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:nottung/models/promote_model.dart';
+import 'package:nottung/models/user_model.dart';
 import 'package:nottung/scaffold/list_product.dart';
 
 class Home extends StatefulWidget {
+  final UserModel userModel;
+  Home({Key key, this.userModel}) : super(key: key);
+
   @override
   _HomeState createState() => _HomeState();
 }
 
 class _HomeState extends State<Home> {
   // Explicit
-  // List<PromoteModel> promoteModels = List();
+
   List<Widget> promoteLists = List();
   List<String> urlImages = List();
+
+  int amountCart = 0;
+  UserModel myUserModel;
 
   // Method
   @override
   void initState() {
     super.initState();
+    myUserModel=widget.userModel;
     readPromotion();
   }
 
@@ -39,7 +47,8 @@ class _HomeState extends State<Home> {
           GestureDetector(
             child: Container(
               child: Image.network(urlImage),
-            ),onTap: (){
+            ),
+            onTap: () {
               print('You Click ${promoteModel.title}');
             },
           ),
@@ -80,7 +89,8 @@ class _HomeState extends State<Home> {
     return Container(
       // color: Colors.grey.shade400,
       height: MediaQuery.of(context).size.height * 0.25,
-      child: promoteLists.length == 0 ? myCircularProgress() : showCarouseSlider(),
+      child:
+          promoteLists.length == 0 ? myCircularProgress() : showCarouseSlider(),
     );
   }
 
@@ -88,7 +98,7 @@ class _HomeState extends State<Home> {
     MaterialPageRoute materialPageRoute =
         MaterialPageRoute(builder: (BuildContext buildContext) {
       return ListProduct(
-        index: index,
+        index: index,userModel: myUserModel,
       );
     });
     Navigator.of(context).push(materialPageRoute);
@@ -220,6 +230,8 @@ class _HomeState extends State<Home> {
       ),
     );
   }
+
+  
 
   @override
   Widget build(BuildContext context) {
