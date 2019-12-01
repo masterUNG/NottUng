@@ -5,6 +5,7 @@ import 'package:http/http.dart';
 import 'package:nottung/models/product_all_model.dart';
 import 'package:nottung/models/unit_size_model.dart';
 import 'package:nottung/utility/my_style.dart';
+import 'package:nottung/utility/normal_dialog.dart';
 
 class Detail extends StatefulWidget {
   final ProductAllModel productAllModel;
@@ -19,7 +20,11 @@ class _DetailState extends State<Detail> {
   ProductAllModel currentProductAllModel;
   ProductAllModel productAllModel;
   List<UnitSizeModel> unitSizeModels = List();
-  List<int> amounts = [1,2,0]; //amounts[0] -> s, amounts[1] -> m,amounts[2] -> l
+  List<int> amounts = [
+    0,
+    0,
+    0
+  ]; //amounts[0] -> s, amounts[1] -> m,amounts[2] -> l
 
   // Method
   @override
@@ -98,7 +103,8 @@ class _DetailState extends State<Detail> {
   }
 
   Widget showChoosePricePackage(int index) {
-    return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
         showDetailPrice(index),
         incDecValue(index),
@@ -117,34 +123,52 @@ class _DetailState extends State<Detail> {
   }
 
   Widget decButton(int index) {
+    int value = amounts[index];
+
     return IconButton(
       icon: Icon(Icons.remove_circle_outline),
       onPressed: () {
         print('dec index = $index');
+
+        if (value == 0) {
+          normalDialog(context, 'Cannot Decrease', 'Because Empty Cart');
+        } else {
+          setState(() {
+            value--;
+            amounts[index] = value;
+          });
+        }
       },
     );
   }
 
   Widget incButton(int index) {
+    int value = amounts[index];
+
     return IconButton(
       icon: Icon(Icons.add_circle_outline),
       onPressed: () {
-        print('inc index = $index');
+        setState(() {
+          print('inc index = $index');
+          value++;
+          amounts[index] = value;
+        });
       },
     );
   }
 
-  Widget showValue(int index) {
-    
-    return Text('${amounts[index]}');
+  Widget showValue(int value) {
+    return Text('$value');
   }
 
   Widget incDecValue(int index) {
+    int value = amounts[index];
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         decButton(index),
-        showValue(index),
+        showValue(value),
         incButton(index),
       ],
     );
