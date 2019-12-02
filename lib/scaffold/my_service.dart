@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:barcode_scan/barcode_scan.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:nottung/scaffold/result_code.dart';
 import 'package:nottung/utility/my_style.dart';
 import 'package:nottung/widget/contact.dart';
 import 'package:nottung/widget/home.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MyService extends StatefulWidget {
   final UserModel userModel;
@@ -56,6 +58,26 @@ class _MyServiceState extends State<MyService> {
         Navigator.of(context).pop();
       },
     );
+  }
+
+  Widget menuLogOut() {
+    return ListTile(
+      leading: Icon(
+        Icons.exit_to_app,
+        size: 36.0,
+      ),
+      title: Text('Log Out and Exit'),
+      subtitle: Text('Log Out and Exit'),
+      onTap: () {
+        logOut();
+      },
+    );
+  }
+
+  Future<void> logOut() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    sharedPreferences.clear();
+    exit(0);
   }
 
   Widget menuContace() {
@@ -150,6 +172,7 @@ class _MyServiceState extends State<MyService> {
           menuHome(),
           menuContace(),
           menuReadQRcode(),
+          menuLogOut(),
         ],
       ),
     );

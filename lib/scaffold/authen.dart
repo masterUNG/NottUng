@@ -6,6 +6,7 @@ import 'package:nottung/models/user_model.dart';
 import 'package:nottung/scaffold/my_service.dart';
 import 'package:nottung/utility/my_style.dart';
 import 'package:nottung/utility/normal_dialog.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Authen extends StatefulWidget {
   @override
@@ -17,8 +18,51 @@ class _AuthenState extends State<Authen> {
   String user, password;
   final formKey = GlobalKey<FormState>();
   UserModel userModel;
+  bool remember = false; //false ==> unCheck, true ==> Check
 
   // Method
+  @override
+  void initState() { 
+    super.initState();
+    checkLogin();
+  }
+
+  Future<void> checkLogin()async{
+
+    try {
+
+      SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+      user = sharedPreferences.getString('User');
+      password = sharedPreferences.getString('Password');
+
+      if (user != null) {
+        checkAuthen();
+      }
+      
+    } catch (e) {
+    }
+
+  }
+
+  Widget rememberCheckBox() {
+    return Container(
+      width: 250.0,
+      child: CheckboxListTile(
+        controlAffinity: ListTileControlAffinity.leading,
+        title: Text(
+          'Remember Me',
+          style: TextStyle(color: MyStyle().textColor),
+        ),
+        value: remember,
+        onChanged: (bool value) {
+          setState(() {
+            remember = value;
+          });
+        },
+      ),
+    );
+  }
+
   Widget loginButton() {
     return Container(
       width: 250.0,
@@ -59,25 +103,45 @@ class _AuthenState extends State<Authen> {
         print('map = $map');
         userModel = UserModel.fromJson(map);
 
-        MaterialPageRoute materialPageRoute =
-            MaterialPageRoute(builder: (BuildContext buildContext) {
-          return MyService(
-            userModel: userModel,
-          );
-        });
-        Navigator.of(context).pushAndRemoveUntil(materialPageRoute,
-            (Route<dynamic> route) {
-          return false;
-        });
+        if (remember) {
+          saveSharePreferance();
+        }else{
+          routeToMyService();
+        }
+
+        
       }
     } // if1
+  }
+
+  Future<void> saveSharePreferance()async{
+
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    sharedPreferences.setString('User', user);
+    sharedPreferences.setString('Password', password);
+
+    routeToMyService();
+
+  }
+
+  void routeToMyService() {
+    MaterialPageRoute materialPageRoute =
+        MaterialPageRoute(builder: (BuildContext buildContext) {
+      return MyService(
+        userModel: userModel,
+      );
+    });
+    Navigator.of(context).pushAndRemoveUntil(materialPageRoute,
+        (Route<dynamic> route) {
+      return false;
+    });
   }
 
   Widget userForm() {
     return Container(
       width: 250.0,
       child: TextFormField(
-        initialValue: 'nott',
+        // initialValue: 'nott',
         onSaved: (String string) {
           user = string.trim();
         },
@@ -93,7 +157,7 @@ class _AuthenState extends State<Authen> {
     return Container(
       width: 250.0,
       child: TextFormField(
-        initialValue: '123456789',
+        // initialValue: '123456789',
         onSaved: (String string) {
           password = string.trim();
         },
@@ -142,15 +206,18 @@ class _AuthenState extends State<Authen> {
           child: Center(
             child: Form(
               key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  showLogo(),
-                  showAppName(),
-                  userForm(),
-                  passwordForm(),
-                  loginButton(),
-                ],
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    showLogo(),
+                    showAppName(),
+                    userForm(),
+                    passwordForm(),
+                    rememberCheckBox(),
+                    loginButton(),
+                  ],
+                ),
               ),
             ),
           ),
