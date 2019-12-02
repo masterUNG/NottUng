@@ -48,6 +48,7 @@ class _MyServiceState extends State<MyService> {
       subtitle: Text('Description Home'),
       onTap: () {
         setState(() {
+          readCart();
           currentWidget = Home(
             userModel: myUserModel,
           );
@@ -155,6 +156,7 @@ class _MyServiceState extends State<MyService> {
   }
 
   Future<void> readCart() async {
+    amountCart = 0;
     String memberId = myUserModel.id;
     String url =
         'http://ptnpharma.com/app/json_loadmycart.php?memberId=$memberId';
