@@ -22,12 +22,12 @@ class _DetailCartState extends State<DetailCart> {
   List<PriceListModel> priceListMModels = List();
   List<PriceListModel> priceListLModels = List();
 
-
   List<ProductAllModel> productAllModels = List();
   List<Map<String, dynamic>> sMap = List();
   List<Map<String, dynamic>> mMap = List();
   List<Map<String, dynamic>> lMap = List();
   int amountCart = 0;
+  String newQTY;
 
   // Method
   @override
@@ -40,6 +40,8 @@ class _DetailCartState extends State<DetailCart> {
   }
 
   Future<void> readCart() async {
+    clearArray();
+
     String memberId = myUserModel.id;
     String url =
         'http://ptnpharma.com/app/json_loadmycart.php?memberId=$memberId';
@@ -65,8 +67,6 @@ class _DetailCartState extends State<DetailCart> {
         priceListSModels.add(priceListModel);
       }
 
-      
-
       Map<String, dynamic> sizeMmap = priceListMap['m'];
       if (sizeMmap == null) {
         mMap.add({'lable': ''});
@@ -74,7 +74,7 @@ class _DetailCartState extends State<DetailCart> {
         priceListMModels.add(priceListModel);
       } else {
         mMap.add(sizeMmap);
-         PriceListModel priceListModel = PriceListModel.fromJson(sizeMmap);
+        PriceListModel priceListModel = PriceListModel.fromJson(sizeMmap);
         priceListMModels.add(priceListModel);
       }
 
@@ -85,7 +85,7 @@ class _DetailCartState extends State<DetailCart> {
         priceListLModels.add(priceListModel);
       } else {
         lMap.add(sizeLmap);
-         PriceListModel priceListModel = PriceListModel.fromJson(sizeLmap);
+        PriceListModel priceListModel = PriceListModel.fromJson(sizeLmap);
         priceListLModels.add(priceListModel);
       }
 
@@ -94,6 +94,18 @@ class _DetailCartState extends State<DetailCart> {
         productAllModels.add(productAllModel);
       });
     }
+  }
+
+  void clearArray() {
+    productAllModels.clear();
+
+    priceListSModels.clear();
+    priceListMModels.clear();
+    priceListLModels.clear();
+
+    sMap.clear();
+    mMap.clear();
+    lMap.clear();
   }
 
   Widget showCart() {
@@ -144,10 +156,13 @@ class _DetailCartState extends State<DetailCart> {
     String quantity = '';
     if (size == 's') {
       quantity = priceListSModels[index].quantity;
+      newQTY = quantity;
     } else if (size == 'm') {
       quantity = priceListMModels[index].quantity;
-    }else {
+      newQTY = quantity;
+    } else {
       quantity = priceListLModels[index].quantity;
+      newQTY = quantity;
     }
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -156,8 +171,11 @@ class _DetailCartState extends State<DetailCart> {
         Text('Size = $size'),
         Container(
           // color: Colors.grey,
-          width: 50.0,
+          width: 30.0,
           child: TextFormField(
+            onChanged: (String string) {
+              newQTY = string.trim();
+            },
             initialValue: quantity,
           ),
         ),
@@ -172,18 +190,41 @@ class _DetailCartState extends State<DetailCart> {
           return AlertDialog(
             title: alertTitle(),
             content: alertContent(index, size),
-            actions: <Widget>[cancelButton(), okButton(),],
+            actions: <Widget>[
+              cancelButton(),
+              okButton(index, size),
+            ],
           );
         });
   }
 
-  Widget okButton() {
+  Widget okButton(int index, String size) {
+    String productID = productAllModels[index].id;
+    String unitSize = size;
+    String memberID = myUserModel.id;
+
     return FlatButton(
       child: Text('OK'),
       onPressed: () {
+        print(
+            'productID = $productID, unitSize = $unitSize, memberID = $memberID, newQTY = $newQTY');
+        editDetailCart(productID, unitSize, memberID);
         Navigator.of(context).pop();
       },
     );
+  }
+
+  Future<void> editDetailCart(
+      String productID, String unitSize, String memberID) async {
+    String url =
+        'http://ptnpharma.com/app/json_updatemycart.php?productID=$productID&unitSize=$unitSize&newQTY=$newQTY&memberID=$memberID';
+
+    await get(url).then((response) {
+      print('Edit OK');
+      readCart();
+    }).catchError((error) {
+      print('error = $error');
+    });
   }
 
   Widget cancelButton() {
@@ -198,8 +239,51 @@ class _DetailCartState extends State<DetailCart> {
   Widget deleteButton(int index, String size) {
     return IconButton(
       icon: Icon(Icons.remove_circle_outline),
-      onPressed: () {},
+      onPressed: () {
+        confirmDelete(index, size);
+      },
     );
+  }
+
+  void confirmDelete(int index, String size) {
+    String titleProduct = productAllModels[index].title;
+
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Confirm Delete'),
+            content: Text('Do You Want Delete $titleProduct'),
+            actions: <Widget>[
+              cancelButton(),
+              confirmButton(index, size),
+            ],
+          );
+        });
+  }
+
+  Widget confirmButton(int index, String size) {
+    return FlatButton(
+      child: Text('Confirm'),
+      onPressed: () {
+        deleteCart(index, size);
+        Navigator.of(context).pop();
+      },
+    );
+  }
+
+  Future<void> deleteCart(int index, String size) async {
+    String productID = productAllModels[index].id;
+    String unitSize = size;
+    String memberID = myUserModel.id;
+    print('productID = $productID, unitSize = $unitSize, memberID = $memberID');
+
+    String url =
+        'http://ptnpharma.com/app/json_removeitemincart.php?productID=$productID&unitSize=$unitSize&memberID=$memberID';
+
+    await get(url).then((response) {
+      readCart();
+    });
   }
 
   Widget editAndDeleteButton(int index, String size) {
@@ -216,6 +300,8 @@ class _DetailCartState extends State<DetailCart> {
     String price = sMap[index]['price'];
     String lable = sMap[index]['lable'];
     String quality = sMap[index]['quantity'];
+
+    print('Qua ======>>>>>> $quality');
 
     return lable.isEmpty
         ? SizedBox()
